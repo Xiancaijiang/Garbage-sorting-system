@@ -5,11 +5,11 @@ from time import sleep
 
 # 舵机参数配置
 SERVO_MIN = 500    # 0°脉宽（us）
-SERVO_MAX = 2500   # 270°脉宽（us）
+SERVO_MAX = 2500   # 180°脉宽（us）
 SERVO_MID = 1500   # 135°中点脉宽（us）
 
 def gimbal_init():
-    global p1, p2, current_angle1
+    global p1, p2
     
     # GPIO初始化
     GPIO.setmode(GPIO.BCM)
@@ -23,15 +23,14 @@ def gimbal_init():
     p2.start(0)
 
     # 初始角度（对应中点）
-    current_angle1 = 155 # 舵机1初始角度
-    set_angle(p1, current_angle1)
-    set_angle(p2, 155)    # 舵机2直立状态
+    set_angle(p1, 50)
+    set_angle(p2, 50)    # 舵机2直立状态
     sleep(1)
 
 def set_angle(pwm, angle):
     """通用角度设置函数"""
-    angle = max(0, min(270, angle))  # 限制角度范围
-    pulse_width = SERVO_MIN + (angle/270)*(SERVO_MAX - SERVO_MIN)
+    angle = max(0, min(180, angle))  # 限制角度范围
+    pulse_width = SERVO_MIN + (angle/180)*(SERVO_MAX - SERVO_MIN)
     duty_cycle = (pulse_width / 20000) * 100  # 50Hz周期20ms=20000us
     pwm.ChangeDutyCycle(duty_cycle)
     sleep(0.5)  # 确保舵机运动时间
@@ -41,32 +40,28 @@ def gimbal_work(direction):
     
     if direction == "front":
         print("前倾")
-        set_angle(p2, 65)  # 舵机2向前下压
+        set_angle(p2, 0)  # 舵机2向前下压
         
     elif direction == "back":
         print("后倾")
-        set_angle(p2, 245)  # 舵机2向后仰
+        set_angle(p2, 180)  # 舵机2向后仰
         
     elif direction == "left":
         print("左倾")
-        # 舵机1左转90度（不超过270°限制）
-        new_angle = min(current_angle1 + 90, 270)
-        current_angle1 = new_angle 
-        set_angle(p1, current_angle1)
-        set_angle(p2, 65)
+        # 舵机1左转90度（不超过180°限制）
+        set_angle(p1, 140)
+        set_angle(p2, 0)
         
     elif direction == "right":
         print("右倾")
         # 舵机1右转90度（不低于0°限制）
-        new_angle = max(current_angle1 - 90, 0)
-        current_angle1 = new_angle
-        set_angle(p1, current_angle1)
-        set_angle(p2, 65) 
+        set_angle(p1, 0)
+        set_angle(p2, 0) 
 
 def gimbal_reset():
     print("复位到中立位置")
-    set_angle(p2, 155)
-    set_angle(p1, 155)
+    set_angle(p2, 50)
+    set_angle(p1, 50)
 
 
 def gimbal_deinit():
